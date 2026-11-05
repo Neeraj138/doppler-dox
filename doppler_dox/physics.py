@@ -60,7 +60,7 @@ def fit_flyby(points, c=SOUND_SPEED):
         warnings.append('Fit reaches a parameter bound.')
     n = max(2, len(f)//5)
     falling = float(np.median(f[:n])-np.median(f[-n:]))
-    searchable = bool(falling > .015*f0 and rms < .025*f0 and speed > 30 and distance > 150
+    searchable = bool(falling > .015*f0 and rms < .015*f0 and speed > 30 and distance > 150
                       and t.min() <= cpa <= t.max() and np.linalg.cond(result.jac) < 1e7)
     if not searchable:
         warnings.append('Inconclusive: no well-constrained aircraft-like falling curve. Do not infer a location from this trace.')
@@ -77,6 +77,8 @@ class Track:
     engine: str = ''
 
     def __post_init__(self):
+        self.bounds_low = self.positions.min(axis=0)
+        self.bounds_high = self.positions.max(axis=0)
         self.origin = float(self.times[0])
         self.local_times = self.times - self.origin
         velocity = np.gradient(self.positions, self.local_times, axis=0)

@@ -32,6 +32,7 @@ def run_search(spec, tracks, events, config, elevations=None, progress=None):
     frequency_tol = number(config, 'frequency_tolerance', .08, .005, .25)
     shift_limit = number(config, 'clock_sweep_s', 5, 0, 30)
     harmonics = int(number(config, 'harmonics', 3, 1, 5))
+    candidate_limit = int(number(config, 'candidate_limit', 120, 20, 2000))
     mode = config.get('score_mode', 'brightness')
     if mode not in ('trace', 'brightness'):
         raise ValueError('score_mode must be brightness or trace.')
@@ -65,7 +66,8 @@ def run_search(spec, tracks, events, config, elevations=None, progress=None):
         for lon in lons:
             alt = elevation(lat, lon)
             obs = ecef(lat, lon, alt)
-            passes = [t.cpa(obs, c) for t in tracks]
+            passes = [t.cpa(obs, c) if np.linalg.norm(np.maximum(t.bounds_low-obs, 0)+np.maximum(obs-t.bounds_high, 0)) <= 17000
+                      else dict(emission=0, received=0, distance=1e9, speed=0, edge=True) for t in tracks]
             choices = []
             for event in events:
                 choices.append([i for i, p in enumerate(passes)
@@ -106,13 +108,13 @@ def run_search(spec, tracks, events, config, elevations=None, progress=None):
     for item in sorted(coarse):
         grouped.setdefault(item[4], []).append(item)
     shortlist = []
-    for rank in range(8):
+    for rank in range(max(map(len, grouped.values()))):
         for pair in sorted(grouped, key=lambda p: grouped[p][0][0]):
             if rank < len(grouped[pair]):
                 shortlist.append(grouped[pair][rank])
-            if len(shortlist) >= 40:
+            if len(shortlist) >= candidate_limit:
                 break
-        if len(shortlist) >= 40:
+        if len(shortlist) >= candidate_limit:
             break
     counts['shortlisted'] = len(shortlist)
     counts['timing_candidates_not_scored'] = len(coarse)-len(shortlist)
@@ -140,11 +142,11 @@ def run_search(spec, tracks, events, config, elevations=None, progress=None):
                     value = -float(np.sqrt(np.mean((f0*ratio-p[:, 1])**2)))
                 else:
                     freqs = np.linspace(event['f0']*(1-frequency_tol), event['f0']*(1+frequency_tol), 17)
-                    values = [spec.brightness(times, ratio*f, harmonics) for f in freqs]
+                    values = spec.brightness_sweep(times, ratio, freqs, harmonics)
                     k = int(np.argmax(values))
                     delta = (freqs[1]-freqs[0])
                     fine = np.linspace(max(freqs[0], freqs[k]-delta), min(freqs[-1], freqs[k]+delta), 9)
-                    vals = [spec.brightness(times, ratio*f, harmonics) for f in fine]
+                    vals = spec.brightness_sweep(times, ratio, fine, harmonics)
                     kk = int(np.argmax(vals))
                     f0, value = float(fine[kk]), float(vals[kk])
                 parts.append(value)

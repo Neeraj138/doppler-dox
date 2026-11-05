@@ -120,18 +120,22 @@ class Spectrogram:
         step = max(1, len(ti)//400)
         return np.column_stack((self.t[ti], freqs))[::step].tolist()
 
-    def brightness(self, times, frequencies, harmonics=3):
-        """Average whitened dB along harmonics; all requested points must exist."""
-        times = np.asarray(times)
-        frequencies = np.asarray(frequencies)
+    def brightness_sweep(self, times, ratios, fundamentals, harmonics=3):
+        """Vectorized brightness scores for several fundamental frequencies."""
+        times, ratios, fundamentals = map(np.asarray, (times, ratios, fundamentals))
         if times.min() < self.t[0] or times.max() > self.t[-1]:
-            return -100.0
-        scores = []
+            return np.full(len(fundamentals), -100.)
+        scores = np.zeros(len(fundamentals))
+        counts = np.zeros(len(fundamentals))
+        time_index = (times-self.t[0])/(self.t[1]-self.t[0])
         for harmonic in range(1, harmonics+1):
-            ff = frequencies*harmonic
-            if ff.min() < self.f[0] or ff.max() > self.f[-1]:
-                continue
-            coords = np.vstack(((ff-self.f[0])/(self.f[1]-self.f[0]),
-                                (times-self.t[0])/(self.t[1]-self.t[0])))
-            scores.append(float(np.mean(map_coordinates(self.db, coords, order=1, mode='constant', cval=-100))))
-        return float(np.mean(scores)) if scores else -100.0
+            ff = fundamentals[:, None]*ratios[None, :]*harmonic
+            valid = (ff.min(axis=1) >= self.f[0]) & (ff.max(axis=1) <= self.f[-1])
+            coords = np.stack(((ff-self.f[0])/(self.f[1]-self.f[0]), np.broadcast_to(time_index, ff.shape)))
+            values = map_coordinates(self.db, coords, order=1, mode='constant', cval=-100).mean(axis=1)
+            scores += np.where(valid, values, 0)
+            counts += valid
+        return np.divide(scores, counts, out=np.full(len(scores), -100.), where=counts>0)
+
+    def brightness(self, times, frequencies, harmonics=3):
+        return float(self.brightness_sweep(times, frequencies, [1.], harmonics)[0])

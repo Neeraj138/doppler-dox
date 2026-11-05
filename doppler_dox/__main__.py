@@ -8,10 +8,14 @@ def main():
     sub = parser.add_subparsers(dest='command')
     serve = sub.add_parser('serve', help='Start the local browser workbench')
     serve.add_argument('--port', type=int, default=8765)
+    serve.add_argument('--case', help='Preload a local case with its real media, tracks and measured events')
     demo = sub.add_parser('demo', help='Run a reproducible synthetic end-to-end search')
     demo.add_argument('--output', default='outputs/demo.json')
     demo.add_argument('--score-mode', choices=['brightness', 'trace'], default='trace')
     demo.add_argument('--seed', type=int, default=7)
+    fetch = sub.add_parser('fetch-history', help='Download official ADS-B daily archives (several GB; resumable)')
+    fetch.add_argument('day')
+    fetch.add_argument('--output', required=True)
     ingest = sub.add_parser('ingest', help='Stream readsb split tar archives into bounded track CSV')
     ingest.add_argument('parts', nargs='+')
     ingest.add_argument('--output', required=True)
@@ -28,7 +32,7 @@ def main():
     args = parser.parse_args()
     if args.command in (None, 'serve'):
         from .server import make_server
-        server = make_server(port=getattr(args, 'port', 8765))
+        server = make_server(port=getattr(args, 'port', 8765), case_path=getattr(args, 'case', None))
         print(f'Doppler Dox is ready at http://127.0.0.1:{server.server_port}', flush=True)
         try:
             server.serve_forever()
@@ -36,6 +40,10 @@ def main():
             pass
         finally:
             server.server_close()
+        return
+    if args.command == 'fetch-history':
+        from .fetch import fetch_history
+        print('\n'.join(fetch_history(args.day, args.output)))
         return
     if args.command == 'ingest':
         from .ingest import convert_traces

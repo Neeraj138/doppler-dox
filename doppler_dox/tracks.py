@@ -40,7 +40,7 @@ def load_tracks(text):
             groups.setdefault(key, []).append((t, lat, lon, alt, row.get('engine', '').strip().upper()))
         except (TypeError, ValueError) as exc:
             raise ValueError(f'Track CSV line {line}: {exc}') from exc
-    tracks, excluded = [], 0
+    tracks, excluded, discontinuities = [], 0, 0
     for key, values in groups.items():
         if any(v[4] in ('J', 'R', 'JET', 'ROCKET') for v in values):
             excluded += 1
@@ -52,7 +52,11 @@ def load_tracks(text):
         if np.any(np.diff(data[:, 0]) == 0):
             raise ValueError(f'Duplicate timestamps in track {key}. Deduplicate before importing.')
         # Never interpolate across large coverage gaps.
-        segments = np.split(data, np.flatnonzero(np.diff(data[:, 0]) > 120)+1)
+        dt = np.diff(data[:, 0])
+        xyz = ecef(data[:, 1], data[:, 2], data[:, 3])
+        jumps = np.linalg.norm(np.diff(xyz, axis=0), axis=1)/dt >= 290
+        discontinuities += int(jumps.sum())
+        segments = np.split(data, np.flatnonzero((dt > 120) | jumps)+1)
         for i, segment in enumerate(segments):
             if len(segment) < 3:
                 continue
@@ -67,7 +71,7 @@ def load_tracks(text):
         raise ValueError('No usable tracks: need at least three positions per non-jet segment.')
     if len(tracks) > 300:
         raise ValueError('Import at most 300 flight segments; filter your data first.')
-    return tracks, dict(tracks=len(tracks), positions=count, excluded_jets=excluded,
+    return tracks, dict(tracks=len(tracks), positions=count, excluded_jets=excluded, discontinuities=discontinuities,
                         start=min(t.times[0] for t in tracks), end=max(t.times[-1] for t in tracks))
 
 

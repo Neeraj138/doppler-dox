@@ -28,6 +28,8 @@ class Application:
         self.job = dict(status='idle', phase='', progress=0)
         self.token = secrets.token_urlsafe(24)
         self.demo_cache = None
+        self.config = {}
+        self.source = {}
 
     def check_mutable(self):
         if self.job['status'] == 'running':
@@ -44,6 +46,7 @@ class Application:
             spec, tracks, elevations = self.spec, self.tracks, self.elevations
             self.job = dict(status='running', phase='Starting search', progress=0)
             self.result = None
+            self.config = dict(config)
         def update(phase, fraction):
             with self.lock:
                 self.job.update(phase=phase, progress=fraction)
@@ -59,10 +62,21 @@ class Application:
         threading.Thread(target=worker, daemon=True).start()
 
 
-def make_server(host='127.0.0.1', port=8765):
+def make_server(host='127.0.0.1', port=8765, case_path=None):
     if host not in ('127.0.0.1', 'localhost', '::1'):
         raise ValueError('The workbench binds to loopback only.')
     app = Application()
+    if case_path:
+        case_path = Path(case_path).resolve()
+        case = json.loads(case_path.read_text())
+        base = case_path.parent
+        app.spec = Spectrogram(decode((base/case['audio']).read_bytes()))
+        app.tracks, _ = load_tracks((base/case['tracks']).read_text())
+        app.config = case['config']
+        app.events = [fit_flyby(e['points'], app.config.get('sound_speed', 343)) for e in case['events']]
+        app.source = dict(case.get('source', {}), audio=case['audio'], tracks=case['tracks'])
+        if case.get('elevations'):
+            app.elevations = Elevations((base/case['elevations']).read_text())
     class Handler(BaseHTTPRequestHandler):
         protocol_version = 'HTTP/1.1'
 
@@ -91,7 +105,7 @@ def make_server(host='127.0.0.1', port=8765):
             try:
                 if path == '/api/state':
                     with app.lock:
-                        return self.reply(200, dict(token=app.token, events=app.events, tracks=len(app.tracks),
+                        return self.reply(200, dict(token=app.token, events=app.events, tracks=len(app.tracks), config=app.config, source=app.source,
                                                    has_audio=app.spec is not None, job=app.job, result=app.result))
                 if path == '/api/view':
                     if app.spec is None:
@@ -161,6 +175,7 @@ def make_server(host='127.0.0.1', port=8765):
                         d = app.demo_cache
                         app.spec, app.tracks = d['spec'], d['tracks']
                         app.events = list(d['events'])
+                        app.config, app.source = dict(d['config']), {}
                         app.elevations, app.result = None, None
                         return self.reply(200, dict(events=app.events, config=d['config'], truth=d['truth'],
                                                     tracks=d['track_summary'], duration=app.spec.duration))

@@ -51,7 +51,7 @@ def convert_traces(parts, output, bbox, start, end, types_path=None, altitude='g
         raise ValueError('Invalid geographic or time bounds.')
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    counts = dict(airframes=0, output_tracks=0, output_positions=0, excluded_jets=0, missing_altitude=0)
+    counts = dict(airframes=0, output_tracks=0, output_positions=0, excluded_jets=0, missing_altitude=0, duplicate_timestamps=0)
     with output.open('w', newline='') as target, io.BufferedReader(JoinedParts(parts), 2**20) as stream:
         writer = csv.writer(target)
         writer.writerow(['track_id','time','latitude','longitude','altitude_m','engine'])
@@ -72,7 +72,7 @@ def convert_traces(parts, output, bbox, start, end, types_path=None, altitude='g
                 if engine in ('J','R'):
                     counts['excluded_jets'] += 1
                     continue
-                rows, leg = [], 0
+                rows, leg = {}, 0
                 for row in document.get('trace', []):
                     if len(row) < 8:
                         continue
@@ -92,9 +92,13 @@ def convert_traces(parts, output, bbox, start, end, types_path=None, altitude='g
                     if alt is None:
                         counts['missing_altitude'] += 1
                         continue
-                    rows.append([f'{document.get("icao", "unknown")}:{leg}',t,lat,lon,float(alt)*.3048+altitude_offset,engine])
+                    key = (f'{document.get("icao", "unknown")}:{leg}', t)
+                    if key in rows:
+                        counts['duplicate_timestamps'] += 1
+                    # Retain the last actual observation for duplicate times, never average positions.
+                    rows[key] = [key[0], t, lat, lon, float(alt)*.3048+altitude_offset, engine]
                 if rows:
-                    writer.writerows(rows)
+                    writer.writerows(rows.values())
                     counts['output_tracks'] += 1
                     counts['output_positions'] += len(rows)
                 if counts['airframes'] % 10000 == 0:
