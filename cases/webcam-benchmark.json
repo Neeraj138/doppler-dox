@@ -1,0 +1,30 @@
+{
+  "method": "Independent public webcam clips, chronological nonoverlapping hour windows; unchanged automatic detector and normal 10 km context search; no camera coordinate passed as a search candidate.",
+  "cameras": [
+    {
+      "id": "lorain",
+      "url": "https://www.youtube.com/watch?v=my6GvU6lG0U",
+      "operator": "Lorain Port and Finance Authority",
+      "media": "data/webcam-validation/lorain.webm",
+      "metadata": "data/webcam-validation/lorain.info.json",
+      "tracks": "data/webcam-validation/lorain-tracks.csv",
+      "starting_area": [41.452, -82.182],
+      "reference": [41.47757, -82.19056],
+      "reference_note": "Published lighthouse landmark position; not a surveyed microphone position. Camera operator places the camera at the lighthouse.",
+      "selection_note": "An independent reimplementation reported audible aircraft in this archive; it was selected as a likely positive-signal case, not as a random sample.",
+      "output": "outputs/webcam-validation/lorain"
+    },
+    {
+      "id": "moosehead",
+      "url": "https://www.youtube.com/watch?v=Lm8qv-wFEHc",
+      "operator": "Boston and Maine Live",
+      "media": "data/webcam-validation/moosehead.webm",
+      "metadata": "data/webcam-validation/moosehead.info.json",
+      "tracks": "data/webcam-validation/moosehead-tracks.csv",
+      "starting_area": [45.46, -69.59],
+      "reference": null,
+      "reference_note": "Public operator identifies Greenville / Moosehead Lake; the exact position of this event's PTZ camera is unconfirmed, so no metre-accuracy claim will be made.",
+      "output": "outputs/webcam-validation/moosehead"
+    }
+  ]
+}
