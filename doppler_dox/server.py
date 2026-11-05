@@ -77,6 +77,14 @@ def make_server(host='127.0.0.1', port=8765, case_path=None):
         app.source = dict(case.get('source', {}), audio=case['audio'], tracks=case['tracks'])
         if case.get('elevations'):
             app.elevations = Elevations((base/case['elevations']).read_text())
+    from .simple import SimpleFlow
+    import hashlib
+    example = None
+    if case_path and app.source.get('date'):
+        media_path = case_path.parent/case['audio']
+        example = dict(path=media_path, digest=hashlib.sha256(media_path.read_bytes()).hexdigest(),
+                       tracks=list(app.tracks), config=dict(app.config))
+    app.simple = SimpleFlow(app, Path.cwd()/'data'/'history', example)
     class Handler(BaseHTTPRequestHandler):
         protocol_version = 'HTTP/1.1'
 
@@ -91,7 +99,7 @@ def make_server(host='127.0.0.1', port=8765, case_path=None):
             self.send_header('Content-Length', str(len(data)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
-            self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'none'")
+            self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://tile.openstreetmap.org; connect-src 'self'; frame-ancestors 'none'")
             self.end_headers()
             self.wfile.write(data)
 
@@ -103,6 +111,9 @@ def make_server(host='127.0.0.1', port=8765, case_path=None):
                 return self.reply(403, {'error': 'Invalid Host header.'})
             path = urlparse(self.path).path
             try:
+                if path == '/api/simple/state':
+                    with app.lock:
+                        return self.reply(200, dict(token=app.token, **app.simple.public()))
                 if path == '/api/state':
                     with app.lock:
                         return self.reply(200, dict(token=app.token, events=app.events, tracks=len(app.tracks), config=app.config, source=app.source,
@@ -136,11 +147,14 @@ def make_server(host='127.0.0.1', port=8765, case_path=None):
                     if app.demo_cache is None:
                         raise ValueError('Load the demo first.')
                     return self.reply(200, app.demo_cache['tracks_csv'].encode(), 'text/csv')
-                names = {'/':'index.html', '/app.js':'app.js', '/style.css':'style.css'}
+                names = {'/':'index.html', '/app.js':'app.js', '/style.css':'style.css',
+                         '/lab':'lab.html', '/lab.js':'lab.js', '/lab.css':'lab.css',
+                         '/vendor/leaflet.js':'vendor/leaflet.js', '/vendor/leaflet.css':'vendor/leaflet.css',
+                         '/vendor/LEAFLET-LICENSE.txt':'vendor/LEAFLET-LICENSE.txt'}
                 if path not in names:
                     return self.reply(404, {'error':'Not found.'})
                 name = names[path]
-                mime = {'html':'text/html; charset=utf-8','js':'text/javascript; charset=utf-8','css':'text/css; charset=utf-8'}[name.split('.')[-1]]
+                mime = {'html':'text/html; charset=utf-8','js':'text/javascript; charset=utf-8','css':'text/css; charset=utf-8','txt':'text/plain; charset=utf-8'}[name.split('.')[-1]]
                 return self.reply(200, (STATIC/name).read_bytes(), mime)
             except (ValueError, TypeError) as exc:
                 self.reply(400, {'error':str(exc)})
@@ -163,6 +177,17 @@ def make_server(host='127.0.0.1', port=8765, case_path=None):
                 if len(raw) != length:
                     raise ValueError('Incomplete request.')
                 path = urlparse(self.path).path
+                if path == '/api/simple/upload':
+                    from urllib.parse import unquote
+                    name = Path(unquote(self.headers.get('X-File-Name', 'Recording'))).name[:200]
+                    app.simple.launch(raw=raw, name=name)
+                    return self.reply(202, {'status':'analyzing'})
+                if path == '/api/simple/example':
+                    app.simple.launch(example=True)
+                    return self.reply(202, {'status':'analyzing'})
+                if path == '/api/simple/continue':
+                    app.simple.launch(context=json.loads(raw))
+                    return self.reply(202, {'status':'analyzing'})
                 if path == '/api/search':
                     app.search(json.loads(raw))
                     return self.reply(202, {'status':'running'})

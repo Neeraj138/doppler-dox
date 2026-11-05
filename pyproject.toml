@@ -13,7 +13,7 @@ dependencies = ["numpy>=1.26,<3", "scipy>=1.12,<2"]
 doppler-dox = "doppler_dox.__main__:main"
 
 [tool.setuptools.package-data]
-doppler_dox = ["static/*"]
+doppler_dox = ["static/*", "static/vendor/*"]
 
 [tool.setuptools.packages.find]
 include = ["doppler_dox*"]
