@@ -61,6 +61,7 @@ def load_tracks(text):
             max_speed = np.max(np.linalg.norm(np.diff(track.positions, axis=0), axis=1)/np.diff(track.times))
             if max_speed >= 290:
                 raise ValueError(f'Track {key} has implausible/subsonic-model-incompatible speeds. Check altitude/time units.')
+            track.geographic = segment[:, 1:3].tolist()
             tracks.append(track)
     if not tracks:
         raise ValueError('No usable tracks: need at least three positions per non-jet segment.')

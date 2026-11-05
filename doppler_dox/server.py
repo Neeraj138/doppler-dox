@@ -105,6 +105,8 @@ def make_server(host='127.0.0.1', port=8765):
                         properties={k:v for k,v in r.items() if k not in ('curves', 'latitude', 'longitude')})
                         for r in app.result['candidates']])
                     return self.reply(200, result)
+                if path == '/api/track-map':
+                    return self.reply(200, {'tracks': [dict(id=t.id, points=t.geographic[::max(1, len(t.geographic)//500)]) for t in app.tracks]})
                 if path == '/api/demo-tracks':
                     if app.demo_cache is None:
                         raise ValueError('Load the demo first.')
