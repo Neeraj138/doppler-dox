@@ -5,6 +5,8 @@ Only original/remuxed real audio is read. Reference camera locations are used af
 inference to measure error, never supplied as search bounds or candidate points.
 """
 import argparse
+import csv
+import io
 import hashlib
 import json
 import math
@@ -48,16 +50,24 @@ def main():
         output=Path(case['output']);output.mkdir(parents=True,exist_ok=True)
         media=Path(case['media']);metadata=json.loads(Path(case['metadata']).read_text())
         rows=[]
-        tracks=None
+        track_rows=None
         if not args.detect_only and case.get('tracks') and Path(case['tracks']).exists():
-            tracks,stats=load_tracks(Path(case['tracks']).read_text())
+            track_rows=list(csv.DictReader(io.StringIO(Path(case['tracks']).read_text())))
+        source_start=case.get('recording_start_epoch',metadata['release_timestamp'])
         for offset,clip in segments(media,output,metadata['duration']):
             started=time.monotonic()
             spec=Spectrogram(decode(clip.read_bytes()))
             found=detect_events(spec)
+            tracks=None
+            if track_rows:
+                selected_rows=[r for r in track_rows if source_start+offset-180 <= float(r['time']) <= source_start+offset+spec.duration+180]
+                if selected_rows:
+                    buffer=io.StringIO();writer=csv.DictWriter(buffer,fieldnames=selected_rows[0].keys());writer.writeheader();writer.writerows(selected_rows)
+                    try: tracks,stats=load_tracks(buffer.getvalue())
+                    except ValueError: tracks=None
             row=dict(offset_s=offset,duration_s=spec.duration,media=str(clip),events=found,
-                     status='no_usable_signal' if not found else 'detected',recording_start_epoch=metadata['release_timestamp']+offset,
-                     clock_basis='YouTube release_timestamp + source offset, uncorrected for broadcast latency',
+                     status='no_usable_signal' if not found else 'detected',recording_start_epoch=source_start+offset,
+                     clock_basis=case.get('clock_basis','YouTube release_timestamp + source offset, uncorrected for broadcast latency'),
                      sha256=hashlib.sha256(clip.read_bytes()).hexdigest())
             print(case['id'],offset,'detected',len(found),[(round(e['cpa_s'],1),round(e['f0'],1),round(e['speed_mps'],1)) for e in found],flush=True)
             if found and tracks is not None:
@@ -69,7 +79,7 @@ def main():
                             elevation_m=0,sound_speed=343,score_mode='brightness',candidate_limit=500,
                             clock_sweep_s=8,offset_tolerance_s=8,frequency_tolerance=.1,
                             speed_tolerance=.45,range_tolerance=.5,harmonics=3,silence=False,
-                            recording_start=metadata['release_timestamp']+offset)
+                            recording_start=source_start+offset)
                 selected=sorted(found[:2],key=lambda e:e['cpa_s'])
                 row['config']=config
                 try:

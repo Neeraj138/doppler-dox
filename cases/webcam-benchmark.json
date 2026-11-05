@@ -8,8 +8,14 @@
       "media": "data/webcam-validation/lorain.webm",
       "metadata": "data/webcam-validation/lorain.info.json",
       "tracks": "data/webcam-validation/lorain-tracks.csv",
-      "starting_area": [41.452, -82.182],
-      "reference": [41.47757, -82.19056],
+      "starting_area": [
+        41.452,
+        -82.182
+      ],
+      "reference": [
+        41.47757,
+        -82.19056
+      ],
       "reference_note": "Published lighthouse landmark position; not a surveyed microphone position. Camera operator places the camera at the lighthouse.",
       "selection_note": "An independent reimplementation reported audible aircraft in this archive; it was selected as a likely positive-signal case, not as a random sample.",
       "output": "outputs/webcam-validation/lorain"
@@ -21,10 +27,15 @@
       "media": "data/webcam-validation/moosehead.webm",
       "metadata": "data/webcam-validation/moosehead.info.json",
       "tracks": "data/webcam-validation/moosehead-tracks.csv",
-      "starting_area": [45.46, -69.59],
+      "starting_area": [
+        45.46,
+        -69.59
+      ],
       "reference": null,
       "reference_note": "Public operator identifies Greenville / Moosehead Lake; the exact position of this event's PTZ camera is unconfirmed, so no metre-accuracy claim will be made.",
-      "output": "outputs/webcam-validation/moosehead"
+      "output": "outputs/webcam-validation/moosehead",
+      "recording_start_epoch": 1789221292.0,
+      "clock_basis": "First source video frame displays 2026-09-12 09:54:52 America/New_York (UTC-04:00); six seconds earlier than platform release_timestamp."
     }
   ]
 }

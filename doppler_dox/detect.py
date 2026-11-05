@@ -9,7 +9,7 @@ from scipy.signal import fftconvolve
 from .physics import flyby, fit_flyby
 
 
-def detect_events(spec, progress=None, max_events=6):
+def detect_events(spec, progress=None, max_events=6, diagnostics=None):
     def report(message, value):
         if progress:
             progress(message, value)
@@ -52,6 +52,9 @@ def detect_events(spec, progress=None, max_events=6):
         selected.append(proposal)
         if len(selected)>=32:
             break
+    if diagnostics is not None:
+        diagnostics['proposals'] = selected
+        diagnostics['fits'] = []
     events=[]
     for i,(strength,cpa,f0,speed,distance) in enumerate(selected):
         report('Checking the sounds we found', .4+.28*i/max(1,len(selected)))
@@ -68,10 +71,15 @@ def detect_events(spec, progress=None, max_events=6):
                 event=fit_flyby(points)
             except ValueError:
                 continue
+            if diagnostics is not None:
+                diagnostics['fits'].append(dict(proposal_cpa=cpa, proposed_f0=f0,
+                    **{k:event[k] for k in ('cpa_s','f0','speed_mps','distance_m','rms_hz','searchable','warnings')}))
             if not event['searchable'] or not 35<=event['speed_mps']<=240 or event['distance_m']>15000:
                 continue
             p=np.asarray(event['points'])
             brightness=spec.brightness(p[:,0],p[:,1],harmonics=1)
+            if diagnostics is not None:
+                diagnostics['fits'][-1]['brightness'] = float(brightness)
             if brightness<5 or event['rms_hz']/event['f0']>.012:
                 continue
             event['detection_strength']=float(brightness)
