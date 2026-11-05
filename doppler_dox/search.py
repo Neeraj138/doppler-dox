@@ -15,6 +15,8 @@ def number(config, key, default, low, high):
 def run_search(spec, tracks, events, config, elevations=None, progress=None):
     if not 1 <= len(events) <= 2:
         raise ValueError('Fit one or two events before searching.')
+    if any(e.get('searchable') is False for e in events):
+        raise ValueError('Inconclusive event: no usable aircraft-like curve. Record a full flyover or trace a clearer ridge.')
     c = number(config, 'sound_speed', 343, 300, 370)
     south = number(config, 'south', 40, -85, 85)
     north = number(config, 'north', 41, -85, 85)

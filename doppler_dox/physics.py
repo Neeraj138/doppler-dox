@@ -58,7 +58,13 @@ def fit_flyby(points, c=SOUND_SPEED):
         warnings.append('Fit is ill-conditioned; fitted parameters are not uniquely constrained.')
     if np.any(np.isclose(result.x, bounds[0], rtol=.01)) or np.any(np.isclose(result.x, bounds[1], rtol=.01)):
         warnings.append('Fit reaches a parameter bound.')
-    return dict(f0=f0, speed_mps=speed, distance_m=distance, cpa_s=cpa, rms_hz=rms,
+    n = max(2, len(f)//5)
+    falling = float(np.median(f[:n])-np.median(f[-n:]))
+    searchable = bool(falling > .015*f0 and rms < .025*f0 and speed > 30 and distance > 150
+                      and t.min() <= cpa <= t.max() and np.linalg.cond(result.jac) < 1e7)
+    if not searchable:
+        warnings.append('Inconclusive: no well-constrained aircraft-like falling curve. Do not infer a location from this trace.')
+    return dict(searchable=searchable, f0=f0, speed_mps=speed, distance_m=distance, cpa_s=cpa, rms_hz=rms,
                 warnings=warnings, points=p.tolist(),
                 model=np.column_stack((t, flyby(t, *result.x, c=c))).tolist())
 

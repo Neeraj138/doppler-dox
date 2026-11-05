@@ -14,3 +14,6 @@ doppler-dox = "doppler_dox.__main__:main"
 
 [tool.setuptools.package-data]
 doppler_dox = ["static/*"]
+
+[tool.setuptools.packages.find]
+include = ["doppler_dox*"]

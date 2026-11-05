@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 import numpy as np
 from scipy import signal
-from scipy.ndimage import map_coordinates
+from scipy.ndimage import map_coordinates, median_filter
 
 RATE = 2000
 MAX_DURATION = 3600
@@ -29,8 +29,9 @@ def decode(data):
         if proc.returncode or not target.exists():
             raise ValueError('Cannot decode media. Use a valid WAV, MP3, FLAC, MP4 or WebM file.')
         samples = np.fromfile(target, dtype='<f4')
-    if len(samples) > MAX_DURATION*RATE:
+    if len(samples) > (MAX_DURATION+.5)*RATE:
         raise ValueError('Recording exceeds the 60-minute limit. Trim it first.')
+    samples = samples[:MAX_DURATION*RATE]  # tolerate sub-second codec padding
     if len(samples) < 8*RATE:
         raise ValueError('Use a recording at least 8 seconds long.')
     if not np.isfinite(samples).all():
@@ -51,6 +52,16 @@ class Spectrogram:
         db = 10*np.log10(np.maximum(power[keep], 1e-20))
         # Remove persistent hum and normalize each time slice's broadband level.
         db -= np.median(db, axis=1, keepdims=True)
+        # A coarse 2-second lattice makes 20-second running-median whitening
+        # practical even for hour-long media, removing intermittent mains hum.
+        stride = max(1, round(2/(t[1]-t[0])))
+        coarse = db[:, ::stride]
+        baseline = median_filter(coarse, size=(1, 11), mode='nearest')
+        index = np.arange(db.shape[1])/stride
+        lower = np.minimum(index.astype(int), coarse.shape[1]-1)
+        upper = np.minimum(lower+1, coarse.shape[1]-1)
+        weight = index-lower
+        db -= baseline[:, lower]*(1-weight)+baseline[:, upper]*weight
         db -= np.median(db, axis=0, keepdims=True)
         self.db = np.clip(db, -20, 50).astype(np.float32)
 
@@ -69,14 +80,21 @@ class Spectrogram:
                     start=float(self.t[ti[0]]), end=float(self.t[ti[-1]]),
                     low=float(self.f[fi[0]]), high=float(self.f[fi[-1]]), duration=self.duration)
 
-    def trace(self, start, end, low, high):
+    def trace(self, start, end, low, high, anchors=None):
         """Viterbi ridge path with bounded bin-to-bin slope and sub-bin peak interpolation."""
         self.view(start, end, low, high)  # validate bounds
         ti = np.flatnonzero((self.t >= start) & (self.t <= end))
         fi = np.flatnonzero((self.f >= low) & (self.f <= high))
         if len(ti)*len(fi) > 3_000_000:
             raise ValueError('Narrow the trace window (time × frequency too large).')
-        values = self.db[np.ix_(fi, ti)]
+        values = self.db[np.ix_(fi, ti)].copy()
+        if anchors:
+            anchors = np.asarray(anchors, dtype=float)
+            if anchors.ndim != 2 or anchors.shape[1] != 2 or len(anchors) < 2 or len(anchors) > 1000 or not np.isfinite(anchors).all():
+                raise ValueError('Provide 2–1000 finite time/frequency anchors.')
+            anchors = anchors[np.argsort(anchors[:, 0])]
+            center = np.interp(self.t[ti], anchors[:, 0], anchors[:, 1])
+            values[np.abs(self.f[fi, None]-center[None, :]) > 7] = -1e9
         previous = values[:, 0].copy()
         parents = np.zeros(values.shape, dtype=np.int16)
         max_jump = max(2, int(3*np.median(np.diff(self.t))/np.diff(self.f)[0]))

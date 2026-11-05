@@ -12,6 +12,17 @@ def main():
     demo.add_argument('--output', default='outputs/demo.json')
     demo.add_argument('--score-mode', choices=['brightness', 'trace'], default='trace')
     demo.add_argument('--seed', type=int, default=7)
+    ingest = sub.add_parser('ingest', help='Stream readsb split tar archives into bounded track CSV')
+    ingest.add_argument('parts', nargs='+')
+    ingest.add_argument('--output', required=True)
+    ingest.add_argument('--bbox', nargs=4, type=float, required=True, metavar=('WEST','SOUTH','EAST','NORTH'))
+    ingest.add_argument('--start', required=True)
+    ingest.add_argument('--end', required=True)
+    ingest.add_argument('--types')
+    ingest.add_argument('--altitude', choices=['geometric','barometric'], default='geometric')
+    ingest.add_argument('--altitude-offset', type=float, default=0, help='Explicit datum correction in metres')
+    export = sub.add_parser('export-demo', help='Write demo WAV, tracks CSV and runnable case JSON')
+    export.add_argument('--output', default='outputs/demo')
     run = sub.add_parser('run', help='Search a saved JSON case and local media/tracks')
     run.add_argument('case')
     args = parser.parse_args()
@@ -25,6 +36,23 @@ def main():
             pass
         finally:
             server.server_close()
+        return
+    if args.command == 'ingest':
+        from .ingest import convert_traces
+        print(convert_traces(args.parts, args.output, args.bbox, args.start, args.end, args.types, args.altitude, args.altitude_offset))
+        return
+    if args.command == 'export-demo':
+        from .demo import make_demo
+        from .audio import RATE
+        from scipy.io import wavfile
+        d = make_demo()
+        folder = Path(args.output)
+        folder.mkdir(parents=True, exist_ok=True)
+        wavfile.write(folder/'synthetic-demo.wav', RATE, d['samples'])
+        (folder/'demo-tracks.csv').write_text(d['tracks_csv'])
+        (folder/'case.json').write_text(json.dumps(dict(audio='synthetic-demo.wav', tracks='demo-tracks.csv',
+            events=d['events'], config=d['config'], output='result.json'), indent=2))
+        print(f'Demo fixtures exported to {folder}')
         return
     from .search import run_search
     if args.command == 'demo':

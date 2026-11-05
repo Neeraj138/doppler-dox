@@ -39,7 +39,9 @@ class Application:
             if self.spec is None or not self.tracks or not self.events:
                 raise ValueError('Load audio, flight tracks and at least one fitted event first.')
             # Snapshot references; input mutations remain locked until the worker finishes.
-            spec, tracks, events, elevations = self.spec, self.tracks, list(self.events), self.elevations
+            events = [fit_flyby(e['points'], float(config.get('sound_speed', 343))) for e in self.events]
+            self.events = events
+            spec, tracks, elevations = self.spec, self.tracks, self.elevations
             self.job = dict(status='running', phase='Starting search', progress=0)
             self.result = None
         def update(phase, fraction):
@@ -107,6 +109,15 @@ def make_server(host='127.0.0.1', port=8765):
                     return self.reply(200, result)
                 if path == '/api/track-map':
                     return self.reply(200, {'tracks': [dict(id=t.id, points=t.geographic[::max(1, len(t.geographic)//500)]) for t in app.tracks]})
+                if path == '/api/demo-audio':
+                    if app.demo_cache is None:
+                        raise ValueError('Load the demo first.')
+                    import io
+                    from scipy.io import wavfile
+                    from .audio import RATE
+                    buffer = io.BytesIO()
+                    wavfile.write(buffer, RATE, app.demo_cache['samples'])
+                    return self.reply(200, buffer.getvalue(), 'audio/wav')
                 if path == '/api/demo-tracks':
                     if app.demo_cache is None:
                         raise ValueError('Load the demo first.')
