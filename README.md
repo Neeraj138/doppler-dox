@@ -58,4 +58,6 @@ npm run test:ui
 python scripts/validate_simple.py cases/real-challenge.json outputs/real-challenge/simple-validation.json
 ```
 
+**Independent webcam testing has not yet produced another verified location. The prototype is not validated as a reliable locator for general uploads.** See the [independent webcam results](docs/WEBCAM_VALIDATION.md).
+
 The upload-first flow was checked using the original public recording and real historical ADS-B tracks. It automatically found both expected flights and returned a point about 415 m from the source video's displayed two-flight result. Short real excerpts also checked inconclusive handling and the time/area prompt. See the [real-data report](docs/REAL_VALIDATION.md) for evidence and limits.

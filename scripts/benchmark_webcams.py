@@ -30,7 +30,8 @@ def segments(media,directory,duration):
         length=min(3599.5,duration-offset-.5)
         if length<20:
             continue
-        destination=directory/f'clip-{offset:05d}.webm'
+        extension='.mka' if media.suffix.lower() in ('.m4a','.aac') else '.webm'
+        destination=directory/f'clip-{offset:05d}{extension}'
         if not destination.exists():
             subprocess.run(['ffmpeg','-v','error','-i',str(media),'-ss',str(offset),'-t',str(length),
                             '-vn','-c:a','copy','-avoid_negative_ts','make_zero','-y',str(destination)],check=True)
@@ -53,22 +54,28 @@ def main():
         track_rows=None
         if not args.detect_only and case.get('tracks') and Path(case['tracks']).exists():
             track_rows=list(csv.DictReader(io.StringIO(Path(case['tracks']).read_text())))
-        source_start=case.get('recording_start_epoch',metadata['release_timestamp'])
-        for offset,clip in segments(media,output,metadata['duration']):
+        source_start=case.get('recording_start_epoch',metadata.get('release_timestamp'))
+        source_duration=case.get('duration_s',metadata.get('duration'))
+        if source_start is None or source_duration is None:
+            raise ValueError('A bounded duration and source timestamp are required for each webcam case.')
+        for offset,clip in segments(media,output,source_duration):
             started=time.monotonic()
             spec=Spectrogram(decode(clip.read_bytes()))
             found=detect_events(spec)
             tracks=None
+            track_load_error=None
             if track_rows:
                 selected_rows=[r for r in track_rows if source_start+offset-180 <= float(r['time']) <= source_start+offset+spec.duration+180]
                 if selected_rows:
                     buffer=io.StringIO();writer=csv.DictWriter(buffer,fieldnames=selected_rows[0].keys());writer.writeheader();writer.writerows(selected_rows)
                     try: tracks,stats=load_tracks(buffer.getvalue())
-                    except ValueError: tracks=None
+                    except ValueError as exc: track_load_error=str(exc)
             row=dict(offset_s=offset,duration_s=spec.duration,media=str(clip),events=found,
                      status='no_usable_signal' if not found else 'detected',recording_start_epoch=source_start+offset,
                      clock_basis=case.get('clock_basis','YouTube release_timestamp + source offset, uncorrected for broadcast latency'),
                      sha256=hashlib.sha256(clip.read_bytes()).hexdigest())
+            if track_load_error:
+                row['track_import_error']=track_load_error
             print(case['id'],offset,'detected',len(found),[(round(e['cpa_s'],1),round(e['f0'],1),round(e['speed_mps'],1)) for e in found],flush=True)
             if found and tracks is not None:
                 lat,lon=case['starting_area']

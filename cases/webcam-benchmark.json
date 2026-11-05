@@ -36,6 +36,23 @@
       "output": "outputs/webcam-validation/moosehead",
       "recording_start_epoch": 1789221292.0,
       "clock_basis": "First source video frame displays 2026-09-12 09:54:52 America/New_York (UTC-04:00); six seconds earlier than platform release_timestamp."
+    },
+    {
+      "id": "lake-hood",
+      "url": "https://www.youtube.com/watch?v=61pi8UjLOlo",
+      "operator": "StreamTime LIVE / Alaska Aviation Museum",
+      "media": "data/webcam-validation/lake-hood-live.m4a",
+      "metadata": "data/webcam-validation/lake-hood-capture.json",
+      "duration_s": 120.001,
+      "recording_start_epoch": 1793863211.685993,
+      "clock_basis": "Live request start time; unmeasured HLS and broadcast latency. Not suitable for a precision absolute-time test.",
+      "starting_area": [
+        61.18,
+        -149.97
+      ],
+      "reference": null,
+      "reference_note": "Publicly identified Lake Hood Seaplane Base. No surveyed microphone position.",
+      "output": "outputs/webcam-validation/lake-hood"
     }
   ]
 }

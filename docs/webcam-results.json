@@ -1,0 +1,222 @@
+{
+  "protocol": "Independent public webcam clips, chronological nonoverlapping hour windows; unchanged automatic detector and normal 10 km context search; no camera coordinate passed as a search candidate.",
+  "independent_sources": [
+    {
+      "id": "lorain",
+      "url": "https://www.youtube.com/watch?v=my6GvU6lG0U",
+      "operator": "Lorain Port and Finance Authority",
+      "starting_area": [
+        41.452,
+        -82.182
+      ],
+      "reference": [
+        41.47757,
+        -82.19056
+      ],
+      "reference_note": "Published lighthouse landmark position; not a surveyed microphone position. Camera operator places the camera at the lighthouse.",
+      "clips": [
+        {
+          "offset_s": 0,
+          "duration_s": 3599.4935,
+          "status": "no_usable_signal",
+          "sha256": "c20cf8abb2da897c223a192af733c03639cd36e6fcfa40fd9a92cbce4aa3a6c4",
+          "clock_basis": "YouTube release_timestamp + source offset, uncorrected for broadcast latency",
+          "recording_start_epoch": 1781551675,
+          "candidate_curves": 0,
+          "matched_events_requested": 0
+        },
+        {
+          "offset_s": 3600,
+          "duration_s": 3599.4935,
+          "status": "no_usable_signal",
+          "sha256": "1e98e1f5721866bf9f986342c384a802c875897d0c983283cc55084695fc441f",
+          "clock_basis": "YouTube release_timestamp + source offset, uncorrected for broadcast latency",
+          "recording_start_epoch": 1781555275,
+          "candidate_curves": 0,
+          "matched_events_requested": 0
+        },
+        {
+          "offset_s": 7200,
+          "duration_s": 2015.4935,
+          "status": "no_usable_signal",
+          "sha256": "24b306a4a77b178558339b34e82bf61f81ec6d8abcebb58f36bbdc0dea285094",
+          "clock_basis": "YouTube release_timestamp + source offset, uncorrected for broadcast latency",
+          "recording_start_epoch": 1781558875,
+          "candidate_curves": 0,
+          "matched_events_requested": 0
+        }
+      ],
+      "track_ingest": {
+        "source": "readsb / adsb.lol historical archive",
+        "altitude": "geometric",
+        "altitude_offset_m": 0,
+        "bbox": [
+          -82.55,
+          41.15,
+          -81.81,
+          41.75
+        ],
+        "start": 1781551200.0,
+        "end": 1781561400.0,
+        "counts": {
+          "airframes": 70148,
+          "output_tracks": 18,
+          "output_positions": 1288,
+          "excluded_jets": 29850,
+          "missing_altitude": 16,
+          "duplicate_timestamps": 0
+        }
+      }
+    },
+    {
+      "id": "moosehead",
+      "url": "https://www.youtube.com/watch?v=Lm8qv-wFEHc",
+      "operator": "Boston and Maine Live",
+      "starting_area": [
+        45.46,
+        -69.59
+      ],
+      "reference": null,
+      "reference_note": "Public operator identifies Greenville / Moosehead Lake; the exact position of this event's PTZ camera is unconfirmed, so no metre-accuracy claim will be made.",
+      "clips": [
+        {
+          "offset_s": 0,
+          "duration_s": 3599.4935,
+          "status": "inconclusive",
+          "sha256": "8aec33952fed946793f0c90a2b6bfd6c3ebd16f1902c2d93fcbb9fa1454208a2",
+          "clock_basis": "First source video frame displays 2026-09-12 09:54:52 America/New_York (UTC-04:00); six seconds earlier than platform release_timestamp.",
+          "recording_start_epoch": 1789221292.0,
+          "candidate_curves": 4,
+          "matched_events_requested": 2,
+          "counts": {
+            "grid_cells": 10201,
+            "geometry_matches": 1277,
+            "timing_matches": 0,
+            "silence_rejected": 0
+          },
+          "returned_candidates": 0,
+          "message": "We couldn\u2019t match the aircraft sounds to this area and time. Try a wider starting area or check the recording time."
+        },
+        {
+          "offset_s": 3600,
+          "duration_s": 3599.4935,
+          "status": "inconclusive",
+          "sha256": "588e54bd41c74990b4eb376217c68ac66be6830f1d4bf5daf19ef6cc1ab29c02",
+          "clock_basis": "First source video frame displays 2026-09-12 09:54:52 America/New_York (UTC-04:00); six seconds earlier than platform release_timestamp.",
+          "recording_start_epoch": 1789224892.0,
+          "candidate_curves": 2,
+          "matched_events_requested": 2,
+          "counts": {
+            "grid_cells": 10201,
+            "geometry_matches": 58,
+            "timing_matches": 0,
+            "silence_rejected": 0
+          },
+          "returned_candidates": 0,
+          "message": "We couldn\u2019t match the aircraft sounds to this area and time. Try a wider starting area or check the recording time."
+        },
+        {
+          "offset_s": 7200,
+          "duration_s": 3599.4935,
+          "status": "inconclusive",
+          "sha256": "ec87c1557e51c3767fa58a191e42933f603d42cc0e1440098e2cfa3b874a606c",
+          "clock_basis": "First source video frame displays 2026-09-12 09:54:52 America/New_York (UTC-04:00); six seconds earlier than platform release_timestamp.",
+          "recording_start_epoch": 1789228492.0,
+          "candidate_curves": 6,
+          "matched_events_requested": 2,
+          "counts": {
+            "grid_cells": 10201,
+            "geometry_matches": 185,
+            "timing_matches": 0,
+            "silence_rejected": 0
+          },
+          "returned_candidates": 0,
+          "message": "We couldn\u2019t match the aircraft sounds to this area and time. Try a wider starting area or check the recording time."
+        },
+        {
+          "offset_s": 10800,
+          "duration_s": 3599.4935,
+          "status": "inconclusive",
+          "sha256": "f58cbd687ef391686164a73fdcb9e8d8f037fdc203c6b613fe77f8e5566f5834",
+          "clock_basis": "First source video frame displays 2026-09-12 09:54:52 America/New_York (UTC-04:00); six seconds earlier than platform release_timestamp.",
+          "recording_start_epoch": 1789232092.0,
+          "candidate_curves": 5,
+          "matched_events_requested": 2,
+          "counts": {
+            "grid_cells": 10201,
+            "geometry_matches": 634,
+            "timing_matches": 0,
+            "silence_rejected": 0
+          },
+          "returned_candidates": 0,
+          "message": "We couldn\u2019t match the aircraft sounds to this area and time. Try a wider starting area or check the recording time."
+        },
+        {
+          "offset_s": 14400,
+          "duration_s": 2762.4935,
+          "status": "inconclusive",
+          "sha256": "63b0ef8b796d64131974f0c4f663870f052824728ff406616a466c730d99f05c",
+          "clock_basis": "First source video frame displays 2026-09-12 09:54:52 America/New_York (UTC-04:00); six seconds earlier than platform release_timestamp.",
+          "recording_start_epoch": 1789235692.0,
+          "candidate_curves": 1,
+          "matched_events_requested": 1,
+          "counts": {
+            "grid_cells": 10201,
+            "geometry_matches": 91,
+            "timing_matches": 0,
+            "silence_rejected": 0
+          },
+          "returned_candidates": 0,
+          "message": "We couldn\u2019t match the aircraft sounds to this area and time. Try a wider starting area or check the recording time."
+        }
+      ],
+      "track_ingest": {
+        "source": "readsb / adsb.lol historical archive",
+        "altitude": "geometric",
+        "altitude_offset_m": 0,
+        "bbox": [
+          -69.99,
+          45.19,
+          -69.19,
+          45.73
+        ],
+        "start": 1789221000.0,
+        "end": 1789238700.0,
+        "counts": {
+          "airframes": 74599,
+          "output_tracks": 64,
+          "output_positions": 1654,
+          "excluded_jets": 28348,
+          "missing_altitude": 44,
+          "duplicate_timestamps": 0
+        }
+      }
+    },
+    {
+      "id": "lake-hood",
+      "url": "https://www.youtube.com/watch?v=61pi8UjLOlo",
+      "operator": "StreamTime LIVE / Alaska Aviation Museum",
+      "starting_area": [
+        61.18,
+        -149.97
+      ],
+      "reference": null,
+      "reference_note": "Publicly identified Lake Hood Seaplane Base. No surveyed microphone position.",
+      "clips": [
+        {
+          "offset_s": 0,
+          "duration_s": 119.5135,
+          "status": "no_usable_signal",
+          "sha256": "87caaeb54137006f6d3b8ccb44b24eafce8ac33052a2be4ca4e2017308922762",
+          "clock_basis": "Live request start time; unmeasured HLS and broadcast latency. Not suitable for a precision absolute-time test.",
+          "recording_start_epoch": 1793863211.685993,
+          "candidate_curves": 0,
+          "matched_events_requested": 0
+        }
+      ]
+    }
+  ],
+  "accepted_pins": 0,
+  "verified_location_matches": 0,
+  "conclusion": "No independently verified location result. Inconclusive responses are not successful geolocation. This selected sample does not estimate a population success rate."
+}
