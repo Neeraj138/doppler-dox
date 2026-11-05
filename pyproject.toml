@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doppler-dox"
+version = "0.1.0"
+description = "Local aircraft Doppler analysis and flight-track matching workbench"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26,<3", "scipy>=1.12,<2"]
+
+[project.scripts]
+doppler-dox = "doppler_dox.__main__:main"
+
+[tool.setuptools.package-data]
+doppler_dox = ["static/*"]
