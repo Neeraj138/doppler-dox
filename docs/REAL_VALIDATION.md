@@ -1,6 +1,6 @@
 # Real-data validation — 5 November 2026
 
-The final application check used real media and real historical aircraft tracks, not generated recordings or generated trajectories.
+The final application check used the simple upload-first UI/API with real media and real historical aircraft tracks, not generated recordings or generated trajectories. No event windows, manual guide points or fitted events were supplied to the automatic upload endpoint.
 
 ## Evidence and procedure
 
@@ -8,9 +8,9 @@ The final application check used real media and real historical aircraft tracks,
 - Flights: official [adsb.lol September 8, 2026 release](https://github.com/adsblol/globe_history_2026/releases/tag/v2026.09.08-planes-readsb-prod-0), approximately 3.87 GB of split tar assets. Aircraft engine classifications use the [tar1090 type table](https://github.com/wiedehopf/tar1090-db).
 - The converter scanned 79,049 airframes and excluded 30,184 known jet/rocket airframes. Region/time filtering retained 26,971 actual positions from 123 airframes. It retained the final actual observation for 152 duplicate timestamps; it did not synthesize or average positions. 195 positions lacked usable geometric altitude and were omitted.
 - Import produced 184 usable flight segments after splitting coverage gaps and 19 implausible position jumps. Data window: 20:30–21:20 UTC. Track ingestion bounds: 40.5–41.2° N, 74.1–73.1° W.
-- The two real ridges were traced with manually placed guide points on the observed spectrogram, then fitted by the app. The guide points constrain tracing; they do not substitute modeled frequencies for measurements.
+- A bank of physical Doppler templates proposed ridges across the entire recording. The app then traced, fitted and checked them automatically. Both expected flyovers were found without manual selection. The matching dataset context is known for the public example; source case event traces and saved location outputs are not used by the upload flow.
 - Observer search: 40.84–40.91° N, 73.57–73.48° W, 200 m initial lattice, 100 m local refinement. Observer ellipsoidal elevation was approximated as −30 m for the waterfront; no measured DEM, weather or pressure correction was applied. Sound speed was 343 m/s, and silence filtering was off.
-- All 74 timing candidates from 1,482 lattice cells were scored. No timing candidate was discarded by the configured shortlist limit of 1,000.
+- All 73 timing candidates from 1,482 lattice cells were scored. No timing candidate was discarded by the configured shortlist limit of 1,000.
 
 This is a **bounded known-site consistency check**. The area was chosen using the published answer. It is not a blind national search or an independent survey of the camera position.
 
@@ -18,15 +18,15 @@ This is a **bounded known-site consistency check**. The area was chosen using th
 
 | Measurement | Event 1 | Event 2 |
 |---|---:|---:|
-| Audio received CPA | 2156.672 s | 3076.472 s |
-| Fitted fundamental | 111.800 Hz | 129.412 Hz |
-| Fitted speed | 148.15 m/s | 106.66 m/s |
-| Fitted slant range | 7703 m | 3165 m |
-| Constant-speed fit RMS | 0.989 Hz | 1.158 Hz |
+| Audio received CPA | 2155.725 s | 3076.518 s |
+| Fitted fundamental | 112.790 Hz | 129.369 Hz |
+| Fitted speed | 139.64 m/s | 107.11 m/s |
+| Fitted slant range | 6304 m | 3202 m |
+| Constant-speed fit RMS | 0.243 Hz | 0.910 Hz |
 | Matched real track | `a1dfeb:3` | `ace391:3` |
-| Selected brightness score | 9.720 | 2.136 |
+| Selected brightness score | 11.668 | 3.063 |
 
-The selected point was **40.873238, −73.522479**, with combined score **5.928**. The source video at approximately [23:59](https://youtu.be/UytYrhYLOKI?t=1439) displays a best two-flight model point of **40.876466, −73.524951**. Our result is approximately **415 m from that displayed model point**. That reference is not a surveyed camera position; this comparison must not be reported as a measured camera error or as reproduction of the video's claimed 100 m accuracy.
+The selected point was **40.873238, −73.522479**, with combined score **7.365**. The source video at approximately [23:59](https://youtu.be/UytYrhYLOKI?t=1439) displays a best two-flight model point of **40.876466, −73.524951**. Our result is approximately **415 m from that displayed model point**. That reference is not a surveyed camera position; this comparison must not be reported as a measured camera error or as reproduction of the video's claimed 100 m accuracy.
 
 Only one flight assignment survived timing and geometry filters in these bounds. This test checks agreement for that pair, not discrimination between thousands of competing flight pairs nationwide. Event 2 has visibly weaker agreement than Event 1; still-air assumptions, altitude uncertainty and ridge selection remain limitations. No confidence probability is assigned.
 
@@ -36,13 +36,13 @@ Only one flight assignment survived timing and geometry filters in these bounds.
 2. Uploaded and decoded the original recording using ffmpeg.
 3. Uploaded the historical track CSV.
 4. Retrieved populated spectrogram pixels for the real recording.
-5. Fitted and saved both measured real events.
-6. Traced a background control window at 900–960 s; its curve was marked **inconclusive**. This does not prove the window contains no aircraft; it shows the automatic trace did not support a usable fit.
+5. Detected both events automatically from the uploaded recording, fitted them, and matched the expected aircraft IDs without manual inputs.
+6. Uploaded a real background excerpt from around 900–960 s; automatic detection found no usable pass and returned **inconclusive**, with no location. A separate roughly two-minute real flyover excerpt found one event and correctly requested recording time and rough area. These checks do not prove the background excerpt contains no aircraft; they show it does not support a usable automatic fit.
 7. Submitted the asynchronous trajectory search, polled completion and exported ranked results plus GeoJSON.
 8. Deliberately shifted Event 2's measured times by 300 s; with a 0.5 s timing tolerance the real tracks yielded **no candidates**.
-9. Verified installation of the Python package, checked JavaScript syntax, and passed the 15-test regression suite. Numerical unit fixtures remain separate from this real-data evidence.
+9. Verified installation of the Python package, checked JavaScript syntax, passed the 15-test backend regression suite, and added seven DOM tests for upload, map pins, OpenStreetMap links, context prompts and inconclusive states. Numerical unit fixtures remain separate from this real-data evidence.
 
-A browser provider was unavailable in the environment. Browser clicking, visual layout and mobile interaction have **not** been verified. API/workflow validation is complete; visual QA remains outstanding.
+A browser provider was unavailable in the environment. Browser clicking, visual layout and mobile interaction have **not** been verified. API/workflow validation and DOM interaction checks are complete; pixel-level visual QA remains outstanding.
 
 ## Reproduce locally
 

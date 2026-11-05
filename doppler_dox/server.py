@@ -83,7 +83,7 @@ def make_server(host='127.0.0.1', port=8765, case_path=None):
     if case_path and app.source.get('date'):
         media_path = case_path.parent/case['audio']
         example = dict(path=media_path, digest=hashlib.sha256(media_path.read_bytes()).hexdigest(),
-                       tracks=list(app.tracks), config=dict(app.config))
+                       tracks=list(app.tracks), config=dict(app.config), label=app.source.get('area_name', 'the prepared example area'))
     app.simple = SimpleFlow(app, Path.cwd()/'data'/'history', example)
     class Handler(BaseHTTPRequestHandler):
         protocol_version = 'HTTP/1.1'
@@ -177,6 +177,8 @@ def make_server(host='127.0.0.1', port=8765, case_path=None):
                 if len(raw) != length:
                     raise ValueError('Incomplete request.')
                 path = urlparse(self.path).path
+                if path == '/api/simple/reset':
+                    return self.reply(200, app.simple.reset())
                 if path == '/api/simple/upload':
                     from urllib.parse import unquote
                     name = Path(unquote(self.headers.get('X-File-Name', 'Recording'))).name[:200]

@@ -8,3 +8,4 @@ data/
 outputs/
 *.bundle
 .dev-git/
+node_modules/

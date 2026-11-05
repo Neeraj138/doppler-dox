@@ -61,6 +61,15 @@ class SimpleFlow:
         self.pending=None
         self.state=dict(status='idle',progress=0,message='',has_example=example is not None)
 
+    def reset(self):
+        with self.app.lock:
+            self.app.check_mutable()
+            self.pending = None
+            self.state = dict(status='idle', progress=0, message='', has_example=self.example is not None)
+            self.app.spec, self.app.events, self.app.result = None, [], None
+            self.app.job = dict(status='idle', progress=0, phase='')
+            return dict(self.state)
+
     def public(self):
         return dict(self.state)
 
@@ -127,7 +136,7 @@ class SimpleFlow:
         if known and context is None:
             tracks=self.example['tracks']
             config=dict(self.example['config'])
-            area_label='Oyster Bay, New York'
+            area_label=self.example['label']
             if len(events)<2:
                 return self.finish('inconclusive','We found only one usable pass in this clip. Try a recording with a fuller aircraft approach and departure.')
         else:

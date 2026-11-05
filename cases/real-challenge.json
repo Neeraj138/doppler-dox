@@ -3850,6 +3850,7 @@
     ],
     "reference_kind": "Best two-flight model point displayed in source video; not a surveyed camera location",
     "observer_elevation": "Approximate WGS84 ellipsoidal waterfront height -30 m; no DEM or weather correction",
-    "date": "2026-09-08"
+    "date": "2026-09-08",
+    "area_name": "Oyster Bay, New York"
   }
 }

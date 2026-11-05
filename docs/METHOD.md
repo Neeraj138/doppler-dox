@@ -15,4 +15,4 @@ This release is a bounded-area CPU implementation. It does not fetch an entire c
 
 Numerical references: SciPy signal spectrogram / optimize least_squares documentation; WGS84 ellipsoid coordinates; source-observer Doppler relation f = f0 / (1 + radial_velocity / sound_speed) with radial velocity positive away. Solve t_receive = t_emit + range(t_emit)/c before evaluating frequency. Straight-line fit uses the analytic emission-time solution; trajectory scoring interpolates positions in ECEF and evaluates the derivative of a cubic Hermite spline.
 
-Use recordings you own, consented recordings or public research challenges. Audio and tracks stay on the local machine. No external map requests or telemetry are used.
+Use recordings you own, consented recordings or public research challenges. Audio and tracks stay on the local machine. The simple UI displays OpenStreetMap tiles for the requested map view. There is no telemetry. New-date flight history is downloaded explicitly as part of the submitted search.
